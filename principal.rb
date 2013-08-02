@@ -3,28 +3,33 @@ require "ai4r"
 require 'RMagick'
 include Magick
 
-frankito_img = ImageList.new 'frankitobw.jpg'
-frankito_input = frankito_img.first.get_pixels(0,0,frankito_img.first.columns,frankito_img.first.rows).collect { |pixel| [pixel.red,pixel.green,pixel.blue]}.flatten
+def obtener_entradas(nombre_imagen)
+  img = ImageList.new nombre_imagen
+  img.first.get_pixels(0, 0, img.first.columns, img.first.rows).collect { |pixel| [pixel.red, pixel.green, pixel.blue] }.flatten
+end
 
-juanpe_img = ImageList.new 'juanpebw.jpg'
-juanpe_input = juanpe_img.first.get_pixels(0,0,juanpe_img.first.columns,juanpe_img.first.rows).collect { |pixel| [pixel.red,pixel.green,pixel.blue]}.flatten
+# Datos de entrenamiento
+input_franco = obtener_entradas 'entrenamiento/francobw.jpg'
+input_juanpe = obtener_entradas 'entrenamiento/juanpebw.jpg'
+input_tincho = obtener_entradas 'entrenamiento/tinchobw.jpg'
 
-tinchito_img = ImageList.new 'tinchitobw.jpg'
-tinchito_input = tinchito_img.first.get_pixels(0,0,tinchito_img.first.columns,tinchito_img.first.rows).collect { |pixel| [pixel.red,pixel.green,pixel.blue]}.flatten
+# Datos de prueba
+input2_juanpe = obtener_entradas 'prueba/juanpebw.jpg'
+input2_tincho = obtener_entradas 'prueba/tinchobw.jpg'
 
 begin
   net = Marshal.load(File.read('net'))
   puts 'Cargando Net previa...'
 rescue
-  net = Ai4r::NeuralNetwork::Backpropagation.new([tinchito_input.size, 12,3])
+  net = Ai4r::NeuralNetwork::Backpropagation.new([input_juanpe.size, 12,3])
   puts 'Inicializando Net por primera vez...'
 end
 
 puts "Entrenando la red..."
-100.times do |i|
+1.times do |i|
   puts (i + 1).to_s + " iteracion"
-  net.train(juanpe_input, [1,0,0])   
-  net.train(tinchito_input, [0,0,1]) 
+  net.train(input_juanpe, [1,0,0])   
+  net.train(input_tincho, [0,0,1]) 
 end
 
 def result_label(result)
@@ -38,10 +43,16 @@ def result_label(result)
 end
 
 puts "Resultados de entrenamiento:"
-juanpe_resultado = net.eval(juanpe_input)
-tincho_resultado = net.eval(tinchito_input)
+juanpe_resultado = net.eval(input_juanpe)
+tincho_resultado = net.eval(input_tincho)
 
 puts "#{juanpe_resultado.inspect} => #{result_label(juanpe_resultado)}"
 puts "#{tincho_resultado.inspect} => #{result_label(tincho_resultado)}"
+
+puts "Resultados de otras pruebas de fotos:"
+juanpe_resultado2 = net.eval(input2_juanpe)
+tincho_resultado2 = net.eval(input2_tincho)
+puts "#{juanpe_resultado2.inspect} => #{result_label(juanpe_resultado2)}"
+puts "#{tincho_resultado2.inspect} => #{result_label(tincho_resultado2)}"
 
 File.open('net','w') {|f| f.write(Marshal.dump(net))}
