@@ -21,7 +21,7 @@ rescue
 end
 
 puts "Entrenando la red..."
-10.times do |i|
+100.times do |i|
   puts (i + 1).to_s + " iteracion"
   net.train(juanpe_input, [1,0,0])   
   net.train(tinchito_input, [0,0,1]) 
